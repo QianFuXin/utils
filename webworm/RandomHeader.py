@@ -253,4 +253,7 @@ import random
 
 # 返回随机头
 def getRandomHeader():
-    return {"User-Agent": allHeaders[random.randint(0, 249)]}
+    # return {"User-Agent": allHeaders[random.randint(0, 249)]}
+    return {
+        'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0.1) Gecko/20100101 Firefox/4.0.1"
+    }

@@ -1,7 +1,8 @@
 import requests
 from selenium.webdriver import Chrome, ChromeOptions
-from RandomHeader import *
+from utils.webworm.RandomHeader import *
 import ssl
+
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
