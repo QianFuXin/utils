@@ -1,0 +1,2 @@
+用来批量处理office旗下的word、excel、pdf文件
+从word中提取图片、word转pdf、pdf转word等功能

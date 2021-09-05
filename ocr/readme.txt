@@ -1,0 +1,2 @@
+使用OCR（Optical Character Recognition）去识别图片中的文字
+可以实现识别身份证、银行卡等卡片
