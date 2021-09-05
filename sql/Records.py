@@ -97,6 +97,7 @@ class Record(object):
 
 class RecordCollection(object):
     """A set of excellent Records from a query."""
+
     def __init__(self, rows):
         self._rows = rows
         self._all_rows = []
@@ -197,7 +198,7 @@ class RecordCollection(object):
         return rows
 
     def as_dict(self, ordered=False):
-        return self.all(as_dict=not(ordered), as_ordereddict=ordered)
+        return self.all(as_dict=not (ordered), as_ordereddict=ordered)
 
     def first(self, default=None, as_dict=False, as_ordereddict=False):
         """Returns a single record for the RecordCollection, or `default`. If
@@ -321,8 +322,14 @@ class Database(object):
         try:
             yield conn
             tx.commit()
-        except:
-            tx.rollback()
+        except Exception as e:
+            # 执行成功但是出现关闭异常
+            if "ResourceClosedError" in str(repr(e)):
+                tx.commit()
+            # 执行失败
+            else:
+                tx.rollback()
+                print("error:" + repr(e))
         finally:
             conn.close()
 
@@ -354,7 +361,7 @@ class Connection(object):
         """
 
         # Execute the given query.
-        cursor = self._conn.execute(text(query), **params) # TODO: PARAMS GO HERE
+        cursor = self._conn.execute(text(query), **params)  # TODO: PARAMS GO HERE
 
         # Row-by-row Record generator.
         row_gen = (Record(cursor.keys(), row) for row in cursor)
@@ -396,7 +403,7 @@ class Connection(object):
         from.
         """
 
-         # If path doesn't exists
+        # If path doesn't exists
         if not os.path.exists(path):
             raise IOError("File '{}'' not found!".format(path))
 
@@ -416,6 +423,7 @@ class Connection(object):
 
         return self._conn.begin()
 
+
 def _reduce_datetimes(row):
     """Receives a row, converts datetimes to strings."""
 
@@ -426,10 +434,11 @@ def _reduce_datetimes(row):
             row[i] = row[i].isoformat()
     return tuple(row)
 
+
 def cli():
     supported_formats = 'csv tsv json yaml html xls xlsx dbf latex ods'.split()
-    formats_lst=", ".join(supported_formats)
-    cli_docs ="""Records: SQL for Humans™
+    formats_lst = ", ".join(supported_formats)
+    cli_docs = """Records: SQL for Humans™
 A Kenneth Reitz project.
 Usage:
   records <query> [<format>] [<params>...] [--url=<url>]
