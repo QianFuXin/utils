@@ -39,7 +39,8 @@ def savePassword(description, account, password):
 
 # 随机密码，默认数字字母符号组合18位
 def randomPassword(description, account, seed):
-    # seed 默认九位，从100000001开始
+    # seed 默认九位,seed可以是1,2,3等常数
+    seed = 100000000 + seed
     # 字母类型
     englishChar = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'l', 'k', 'j', 'h', 'g', 'f', 'd', 's', 'a', 'z',
                    'x',

@@ -98,7 +98,7 @@ def getLocationByText(parsed, text):
         # 利用findall去找,如果只有一个结果,返回,否则用选择器去递归(因为只靠find_all找不到唯一的)
         result = parsed.find_all(name=tagName, attrs=tagAttri)
         if len(result) == 1:
-            return "parsed.find_all(name='tagName', attrs=tagAttri)".replace("tagName", tagName).replace("tagAttri",
+            return "parsed.find_all(name='tagName', attrs=tagAttri)[0]".replace("tagName", tagName).replace("tagAttri",
                                                                                                          str(tagAttri))
         # 当有多个结果,findall无法解决唯一的问题时
         # 则利用更加精细的选择器方法,向上寻找父亲标签

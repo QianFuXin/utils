@@ -204,4 +204,4 @@ import random
 
 # 返回随机头
 def getRandomHeader():
-    return {"User-Agent": allHeaders[random.randint(0, 199)]}
+    return {"User-Agent": allHeaders[random.randint(0, len(allHeaders) - 1)]}

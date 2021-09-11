@@ -77,6 +77,7 @@ def getDirSize(path):
         return str((round(dirSize / 1073741824), 2)) + ' GB'
     return str(dirSize) + ' B'
 
+
 def getFileSuffix(path):
     """
     获得文件的后缀
@@ -88,3 +89,16 @@ def getFileSuffix(path):
         return ""
     else:
         return path[dot + 1:]
+
+
+def getFilePrefix(path):
+    """
+    获得文件的前缀
+    :param path:文件路径
+    :return:文件前缀
+    """
+    dot = path.rfind('.')
+    if dot == -1:
+        return ""
+    else:
+        return path[:dot]

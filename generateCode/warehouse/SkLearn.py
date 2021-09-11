@@ -62,8 +62,10 @@ print('Accuracy: %.3f' % accuracy_score(y_test, y_pred))
 print('Accuracy: %.3f' % ppn.score(X_test_std, y_test))
     """
     return info
+
+
 def logisticRegression():
-    info="""
+    info = """
     \"\"\"
 逻辑回归
 lbfgs算法(最小化损失函数)
@@ -90,4 +92,169 @@ print(lr.predict(X_test_std[:3, :]))
 # 只预测一行数据
 print(lr.predict(X_test_std[0, :].reshape(1, -1)))
     """.lower()
+    return info
+
+
+def svc():
+    info = '''
+# 线性SVC模型,C越大,分类要求越严格
+svm = SVC(kernel='linear', C=1.0, random_state=1)
+svm.fit(X_train_std, y_train)
+# 非线性SVC模型
+# gamma参数,高斯球的截止参数,gamma越大,范围越小,会一直收缩
+svm = SVC(kernel='rbf', random_state=1, gamma=0.10, C=10.0)
+svm.fit(X_train_std, y_train)
+    '''.lower()
+    return info
+
+
+def sgd():
+    info = '''
+# 随机梯度下降算法分类器,针对于数据集较大的情况
+ppn = SGDClassifier(loss='perceptron')
+ppn.fit(X_train_std, y_train)
+lr = SGDClassifier(loss='log')
+lr.fit(X_train_std, y_train)
+svm = SGDClassifier(loss='hinge')
+svm.fit(X_train_std, y_train)
+    '''.lower()
+    return info
+
+
+def dicisionTree():
+    info = '''
+# 评判标准为基尼杂质,最大深度为4,通过减少最大深度,来进行修剪枝叶
+tree_model = DecisionTreeClassifier(criterion='gini',
+                                    max_depth=4,
+                                    random_state=1)
+tree_model.fit(X_train, y_train)
+tree_model.predict()
+# 决策树详细信息可视化
+tree.plot_tree(tree_model)
+plt.show()
+# 更详细的决策树信息可视化
+dot_data = export_graphviz(tree_model,
+                           filled=True,
+                           rounded=True,
+                           class_names=['Setosa',
+                                        'Versicolor',
+                                        'Virginica'],
+                           feature_names=['petal length',
+                                          'petal width'],
+                           out_file=None)
+graph = graph_from_dot_data(dot_data)
+graph.write_png('tree.png')
+    '''.lower()
+    return info
+
+
+def randomForest():
+    info = '''
+# 评判标准为基尼杂质
+# 25个决策树组成的随机森林
+# 使用两个核心
+forest = RandomForestClassifier(criterion='gini',
+                                n_estimators=25,
+                                random_state=1,
+                                n_jobs=2)
+forest.fit(X_train, y_train)
+forest.predict()
+    '''.lower()
+    return info
+
+
+def knn():
+    info = '''
+    # k近邻 5个邻居  p = 2等于标准欧几里德度量标准
+knn = KNeighborsClassifier(n_neighbors=5,
+                           p=2,
+                           metric='minkowski')
+knn.fit(X_train_std, y_train)
+knn.predict()
+    '''.lower()
+    return info
+
+
+def nanProcess():
+    info = '''
+# 输出每类有多少个缺失值
+print(df.isnull().sum())
+# 输出值
+print(df.values)
+# 删除包含缺失值的行
+print(df.dropna(axis=0))
+# 删除包含缺失值的列
+print(df.dropna(axis=1))
+# 删除一行全是缺失值的行
+print(df.dropna(how='all'))
+# 删除一行有效值小于3个的行
+print(df.dropna(thresh=4))
+# 删除指定列出现缺失值的行
+print(df.dropna(subset=['C']))
+
+# 用列的均值去代替缺失值 mean可以替换为median、most_frequent（中位数和众数）
+imr = SimpleImputer(missing_values=np.nan, strategy='mean')
+# 从训练数据中学习参数
+imr = imr.fit(df.values)
+# 转换模型
+imputed_data = imr.transform(df.values)
+print(imputed_data)
+# 用列的均值去代替缺失值
+df.fillna(df.mean())
+'''
+
+
+def lableOrFutureEncoder():
+    info = '''
+    df = pd.DataFrame([['green', 'M', 10.1, 'class2'],
+                   ['red', 'L', 13.5, 'class1'],
+                   ['blue', 'XL', 15.3, 'class2']])
+
+df.columns = ['color', 'size', 'price', 'classlabel']
+print(df)
+size_mapping = {'XL': 3,
+                'L': 2,
+                'M': 1}
+# 把字符串转数字,可以比较大小
+df['size'] = df['size'].map(size_mapping)
+print(df)
+
+# 把字符串类型的标签转换为数字
+# {标签1:值,标签2:值,}
+class_mapping = {label: idx for idx, label in enumerate(np.unique(df['classlabel']))}
+print(class_mapping)
+# df['classlabel'] = df['classlabel'].map(class_mapping)
+# print(df)
+# sk自带的标签编码方法
+class_le = LabelEncoder()
+print(df['classlabel'].values)
+# 把字符标签转化为数字标签
+y = class_le.fit_transform(df['classlabel'].values)
+print(y)
+# 把数字标签转换为字符标签
+print(class_le.inverse_transform(y))
+
+# 独热编码，n个数据，n维，只有自己的那一维是1，其他全是0
+X = df[['color', 'size', 'price']].values
+color_ohe = OneHotEncoder()
+print(color_ohe.fit_transform(X[:, 0].reshape(-1, 1)).toarray())
+
+# 把one hot编码加入原始数据中
+X = df[['color', 'size', 'price']].values
+c_transf = ColumnTransformer([('onehot', OneHotEncoder(), [0]),
+                              ('nothing', 'passthrough', [1, 2])])
+print(c_transf.fit_transform(X).astype(float))
+
+# 通过pandas实现热编码 只转换字符串列
+pd.get_dummies(df[['price', 'color', 'size']])
+
+# 删除第一个特征列
+print(pd.get_dummies(df[['price', 'color', 'size']], drop_first=True))
+
+# 删除ont hot编码的冗余列
+color_ohe = OneHotEncoder(categories='auto', drop='first')
+c_transf = ColumnTransformer([('onehot', color_ohe, [0]),
+                              ('nothing', 'passthrough', [1, 2])])
+print(c_transf.fit_transform(X).astype(float))
+    '''
     return info
