@@ -22,25 +22,27 @@ def pinYin(description, account, info):
     return transformed
 
 
+# 保存密码
 def savePassword(description, account, password):
-    passwordDir = "/Users/apple/钱甫新的文件/专业知识/密码"
-    passwordPath = os.path.join(passwordDir, description + '的账户和密码.txt')
-    # 如果文件重复  文件结尾拼接_repeat
-    while 1:
-        if os.path.exists(passwordPath):
-            passwordPath = passwordPath[:-4] + '_repeat.txt'
-        else:
-            break
-    # 把账号密码写入文件，进行备份
-    with open(passwordPath, 'w', encoding='utf8') as file:
-        file.writelines("账户：" + account + '\n')
-        file.writelines('密码：' + password)
+    pass
+    # passwordDir = "/Users/apple/钱甫新的文件/专业知识/密码"
+    # passwordPath = os.path.join(passwordDir, description + '的账户和密码.txt')
+    # # 如果文件重复  文件结尾拼接_repeat
+    # while 1:
+    #     if os.path.exists(passwordPath):
+    #         passwordPath = passwordPath[:-4] + '_repeat.txt'
+    #     else:
+    #         break
+    # # 把账号密码写入文件，进行备份
+    # with open(passwordPath, 'w', encoding='utf8') as file:
+    #     file.writelines("账户：" + account + '\n')
+    #     file.writelines('密码：' + password)
 
 
 # 随机密码，默认数字字母符号组合18位
-def randomPassword(description, account, seed):
+def randomPassword(seed):
     # seed 默认九位,seed可以是1,2,3等常数
-    seed = 100000000 + seed
+    seed = 100000000 + int(seed)
     # 字母类型
     englishChar = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'l', 'k', 'j', 'h', 'g', 'f', 'd', 's', 'a', 'z',
                    'x',

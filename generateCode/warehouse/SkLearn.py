@@ -204,7 +204,7 @@ df.fillna(df.mean())
 '''
 
 
-def lableOrFutureEncoder():
+def lableOrFeatureEncoder():
     info = '''
     df = pd.DataFrame([['green', 'M', 10.1, 'class2'],
                    ['red', 'L', 13.5, 'class1'],
@@ -257,4 +257,161 @@ c_transf = ColumnTransformer([('onehot', color_ohe, [0]),
                               ('nothing', 'passthrough', [1, 2])])
 print(c_transf.fit_transform(X).astype(float))
     '''
+    return info
+
+
+def scaler():
+    info = '''# 最大最小归一化 数值范围[0 - 1]
+mms = MinMaxScaler()
+X_train_norm = mms.fit_transform(X_train)
+X_test_norm = mms.transform(X_test)
+print(X_train_norm)
+print(X_test_norm)
+
+# 标准化缩放
+stdsc = StandardScaler()
+X_train_std = stdsc.fit_transform(X_train)
+X_test_std = stdsc.transform(X_test)
+ex = np.array([0, 1, 2, 3, 4, 5])
+
+print('standardized:', (ex - ex.mean()) / ex.std())'''
+    return info
+
+
+# 特征选择
+def featureChoose():
+    info = '''
+    ## 特征提取是压缩多个维度，特征选择是舍弃一些不重要的维度
+    # SBS算法 使用特征选择去实现降维
+class SBS():
+    def __init__(self, estimator, k_features, scoring=accuracy_score,
+                 test_size=0.25, random_state=1):
+        self.scoring = scoring
+        self.estimator = clone(estimator)
+        self.k_features = k_features
+        self.test_size = test_size
+        self.random_state = random_state
+
+    def fit(self, X, y):
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=self.test_size,
+                                                            random_state=self.random_state)
+
+        dim = X_train.shape[1]
+        self.indices_ = tuple(range(dim))
+        self.subsets_ = [self.indices_]
+        score = self._calc_score(X_train, y_train,
+                                 X_test, y_test, self.indices_)
+        self.scores_ = [score]
+
+        while dim > self.k_features:
+            scores = []
+            subsets = []
+
+            for p in combinations(self.indices_, r=dim - 1):
+                score = self._calc_score(X_train, y_train,
+                                         X_test, y_test, p)
+                scores.append(score)
+                subsets.append(p)
+
+            best = np.argmax(scores)
+            self.indices_ = subsets[best]
+            self.subsets_.append(self.indices_)
+            dim -= 1
+
+            self.scores_.append(scores[best])
+        self.k_score_ = self.scores_[-1]
+
+        return self
+
+    def transform(self, X):
+        return X[:, self.indices_]
+
+    def _calc_score(self, X_train, y_train, X_test, y_test, indices):
+        self.estimator.fit(X_train[:, indices], y_train)
+        y_pred = self.estimator.predict(X_test[:, indices])
+        score = self.scoring(y_test, y_pred)
+        return score
+
+knn = KNeighborsClassifier(n_neighbors=5)
+# 查找特征
+sbs = SBS(knn, k_features=1)
+sbs.fit(X_train_std, y_train)
+
+#对特征子集的性能进行绘图
+k_feat = [len(k) for k in sbs.subsets_]
+
+plt.plot(k_feat, sbs.scores_, marker='o')
+plt.ylim([0.7, 1.02])
+plt.ylabel('Accuracy')
+plt.xlabel('Number of features')
+plt.grid()
+plt.tight_layout()
+# plt.savefig('images/04_08.png', dpi=300)
+plt.show()
+
+
+# 用随机森林选择特征
+feat_labels = df_wine.columns[1:]
+
+forest = RandomForestClassifier(n_estimators=500,
+                                random_state=1)
+
+forest.fit(X_train, y_train)
+importances = forest.feature_importances_
+
+indices = np.argsort(importances)[::-1]
+
+for f in range(X_train.shape[1]):
+    print("%2d) %-*s %f" % (f + 1, 30,
+                            feat_labels[indices[f]],
+                            importances[indices[f]]))
+
+plt.title('Feature Importance')
+plt.bar(range(X_train.shape[1]),
+        importances[indices],
+        align='center')
+
+plt.xticks(range(X_train.shape[1]),
+           feat_labels[indices], rotation=90)
+plt.xlim([-1, X_train.shape[1]])
+plt.tight_layout()
+# plt.savefig('images/04_09.png', dpi=300)
+plt.show()
+
+# 选择特征 只选择重要性大于0.1的特征
+sfm = SelectFromModel(forest, threshold=0.1, prefit=True)
+X_selected = sfm.transform(X_train)
+print('Number of features that meet this threshold criterion:',
+      X_selected.shape[1])
+
+# Now, let's print the 3 features that met the threshold criterion for feature selection that we set earlier (note that this code snippet does not appear in the actual book but was added to this notebook later for illustrative purposes):
+
+
+for f in range(X_selected.shape[1]):
+    print("%2d) %-*s %f" % (f + 1, 30,
+                            feat_labels[indices[f]],
+                            importances[indices[f]]))
+'''
+    return info
+
+
+def PCA():
+    info = '''# 主成分分析（非监督学习）
+# 只保留两个主成分分析
+# 如果n_components=None 则不降维，返回所有排序后的主成分
+pca = PCA(n_components=2)
+X_train_pca = pca.fit_transform(X_train_std)
+# 访问解释方差比
+print(pca.explained_variance_ratio_)
+
+# 通过SK实现LDA（监督学习） 两个主成
+lda = LDA(n_components=2)
+X_train_lda = lda.fit_transform(X_train_std, y_train)
+X_test_lda = lda.transform(X_test_std)
+
+# KPAC(解决非线性问题的降维)
+X, y = make_moons(n_samples=100, random_state=123)
+scikit_kpca = KernelPCA(n_components=2, kernel='rbf', gamma=15)
+X_skernpca = scikit_kpca.fit_transform(X)'''
     return info

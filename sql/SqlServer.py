@@ -1,9 +1,14 @@
+# 下面两行代码防止pyinstaller打包不成功
+from pymssql import _mssql
+from pymssql import _pymssql
 import pymssql
+import pandas as pd
 
 
 # 获得cursor
-def __getCursor__(user, password, host, database):
-    conn = pymssql.connect(host=host, user=user, password=password, database=database, charset="cp936")
+def __getCursor__(user, password, host, database, charset="UTF-8"):
+    # 如果乱码用cp936
+    conn = pymssql.connect(host=host, user=user, password=password, database=database, charset=charset)
     cur = conn.cursor()
     return cur, conn
 
@@ -14,9 +19,9 @@ def __updateAction__(user, password, host, database, sql):
     # 如果中间发生异常，回滚,最终提交
     try:
         cur.execute(sql)
-        cur.commit()
+        conn.commit()
     except:
-        cur.rollback()
+        conn.rollback()
         return False
     finally:
         cur.close()
@@ -24,23 +29,43 @@ def __updateAction__(user, password, host, database, sql):
         return True
 
 
-# 返回格式为数组，数组内部单位是元组，一个元组代表一行数据[(),()]
-def select(user, password, host, database, sql):
+# 获得表的列名，格式为列表
+def getTableColumns(user, password, host, database, table):
     cur, conn = __getCursor__(user, password, host, database)
-    # 查询数据
-    cur.execute(sql)
-    li = cur.fetchall()
-
+    cur.execute("select top 1 *  from " + table)
+    col = cur.description
+    li = [i[0] for i in col]
     cur.close()
     conn.close()
     return li
 
 
+# 返回格式为数组，数组内部单位是元组，第一个元组是列名，一个元组代表一行数据[(),()]
+# 第二个参数是DataFrame
+def select(user, password, host, database, sql, charset="UTF-8"):
+    cur, conn = __getCursor__(user, password, host, database, charset)
+    # 查询数据
+    cur.execute(sql)
+    li = cur.fetchall()
+    # 列名
+    col = cur.description
+    col = [i[0] for i in col]
+    li = [tuple(col)] + li
+    df = pd.DataFrame(li[1:], columns=li[0])
+    cur.close()
+    conn.close()
+    return li, df
+
+
 # columns为插入的列名，格式为[c1,c2,c3]
 # data为插入的数据，格式为[(1，2，3),(4，5，6)]
+# 如果不指定列名(很多列的情况下),把columns=""
 def insert(user, password, host, database, table, columns, data):
     if len(data) == 0:
         return "数据为空"
+    # 如果不指定列名，默认插入一行
+    if "".__eq__(columns):
+        columns = getTableColumns(user, password, host, database, table)
     cur, conn = __getCursor__(user, password, host, database)
     # 拼接列名
     col = ",".join(columns)
@@ -54,13 +79,14 @@ def insert(user, password, host, database, table, columns, data):
     try:
         cur.executemany(sql, data)
         conn.commit()
+        return True
     except Exception as e:
-        cur.rollback()
+        print(e)
+        conn.rollback()
         return False
     finally:
         cur.close()
         conn.close()
-        return True
 
 
 # condition的类型为str格式为 minTemperature=2 and maxTemperature=200

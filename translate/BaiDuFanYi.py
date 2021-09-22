@@ -1,3 +1,5 @@
+import os
+
 import requests
 import js2py
 import json
@@ -8,7 +10,7 @@ def translate(word, fromLa, toLa):
     # 创建上下文对象
     context = js2py.EvalJs()
     # 执行js获得sign
-    with open(r'C:\Users\Administrator\PycharmProjects\QianFuXin\utils\translate\百度翻译的.js', 'r', encoding='utf-8') as f:
+    with open(r'百度翻译的.js', 'r', encoding='utf-8') as f:
         context.execute(f.read())
     sign = context.e(word)
 

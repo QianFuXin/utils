@@ -1,2 +1,0 @@
-利用SMTP（Simple Mail Transfer Protocol）发送邮件
-需要邮箱开启SMTP的功能和提供授权码

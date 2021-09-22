@@ -1,10 +1,8 @@
 import qrcode
 import os
-
-# 存入二维码的内容、保存二维码图片的名称、路径
 import zxing
 
-
+# 存入二维码的内容、保存二维码图片的名称、路径
 def makeQR(word, name="qr", path=os.getcwd()):
     qr = qrcode.QRCode(
         # 1、二维码的大小

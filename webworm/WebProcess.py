@@ -87,7 +87,7 @@ def getLocationByText(parsed, text):
     # 如果文本数量不为1,则异常
     if len(temp) == 0:
         print("网页中未找到输入的文本")
-        return None
+        return "网页中未找到输入的文本"
     elif len(temp) == 1:
         # 获得此标签
         tag = temp[0].parent
@@ -98,8 +98,11 @@ def getLocationByText(parsed, text):
         # 利用findall去找,如果只有一个结果,返回,否则用选择器去递归(因为只靠find_all找不到唯一的)
         result = parsed.find_all(name=tagName, attrs=tagAttri)
         if len(result) == 1:
-            return "parsed.find_all(name='tagName', attrs=tagAttri)[0]".replace("tagName", tagName).replace("tagAttri",
-                                                                                                         str(tagAttri))
+            return "parsed.find_all(name='tagName', attrs=tagAttri)[0].text.strip()".replace("tagName",
+                                                                                             tagName).replace(
+                "tagAttri",
+                str(
+                    tagAttri))
         # 当有多个结果,findall无法解决唯一的问题时
         # 则利用更加精细的选择器方法,向上寻找父亲标签
         else:
@@ -119,17 +122,18 @@ def getLocationByText(parsed, text):
             # 如果元素查找长度为1,则说明找到了唯一
             result = parsed.select(relationship)
             if len(result) == 1:
-                return "parsed.select('relationship')".replace("relationship", relationship)
+                return "parsed.select('relationship')[0].text.strip()".replace("relationship", relationship)
             # 如果利用选择器后还是有多个结果,则通过text来判断,返回数组下标
             else:
                 # 遍历所有内容,然后匹配text,匹配了返回下标(nice),解放双手~
                 for i in range(len(result)):
                     if text in result[i].text:
-                        return "parsed.select('relationship')[下标]".replace("relationship", relationship).replace("下标",
-                                                                                                                 str(i))
+                        return "parsed.select('relationship')[下标].text.strip()".replace("relationship",
+                                                                                        relationship).replace("下标",
+                                                                                                              str(i))
     else:
         print("输入的文本在网页中不唯一")
-        return None
+        return "网页中未找到输入的文本"
 
 
 def getInfoByURLWithSelenium(URL, headless=True, chromeDriverPath='/Users/apple/PycharmProjects/chromedriver90'):

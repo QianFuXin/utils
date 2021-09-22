@@ -1,7 +1,8 @@
 import os
+import re
 
 
-def getAllFilesByDir(path):
+def getAllFilesByDir(path, suffix=None):
     """
     参数：path，一个文件夹路径，字符串格式
     主要作用：获得文件夹下面的所有文件
@@ -25,6 +26,9 @@ def getAllFilesByDir(path):
                 # 添加到数组
                 allFiles.append(os.path.join(root, i))
         # 返回值
+        # 如果需要过滤后缀
+        if suffix:
+            allFiles = [i for i in allFiles if re.match(f".*\.{suffix}$", i)]
         return allFiles
 
 
@@ -50,15 +54,15 @@ def getAllDirByDir(path):
     # 返回值
     return allDirs
 
+    """
+    参数：path，一个文件夹的路径，字符串类型
+    主要功能：得到某个文件夹的大小
+    返回值：某个文件夹的大小，字符串类型
+    """
 
-"""
-参数：path，一个文件夹的路径，字符串类型
-主要功能：得到某个文件夹的大小
-返回值：某个文件夹的大小，字符串类型
-"""
+    # 获取文件夹的大小
 
 
-# 获取文件夹的大小
 def getDirSize(path):
     dirSize = 0
     # 获取所有的文件
