@@ -1,10 +1,12 @@
 # 下面两行代码防止pyinstaller打包不成功
+import chardet
 from pymssql import _mssql
 from pymssql import _pymssql
 import pymssql
 import pandas as pd
 
 
+# 因为varchar类型的中文查询会乱码，所以需要转成nvarchar查询
 # 获得cursor
 def __getCursor__(user, password, host, database, charset="UTF-8"):
     # 如果乱码用cp936
@@ -37,7 +39,7 @@ def getTableColumns(user, password, host, database, table):
     li = [i[0] for i in col]
     cur.close()
     conn.close()
-    return li
+    return col
 
 
 # 返回格式为数组，数组内部单位是元组，第一个元组是列名，一个元组代表一行数据[(),()]

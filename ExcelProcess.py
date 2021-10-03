@@ -42,21 +42,14 @@ def listToExcel(data, path, sheetName=""):
     if len(data) == 0:
         return "列表为空"
     wb = Workbook()
-    print(wb.sheetnames)
-    # 如果文件已经存在，则则复制源文件，然后添加新文件
+    # 如果文件已经存在，打开原文件
     if os.path.exists(path):
-        # 获得所有工作簿内容，为字典
-        allData = excelToList(path, 'all')
-        for i in allData:
-            if i not in wb.sheetnames:
-                wb.create_sheet(i)
-            ws = wb.get_sheet_by_name(i)
-            for k in allData[i]:
-                ws.append(k)
+        wb = openpyxl.load_workbook(r'' + path)
     # 如果没输入工作簿名称，使用默认
     if sheetName.__eq__(""):
         ws = wb.active
     else:
+        # 如果输入的工作簿不存在，则创建
         if sheetName not in wb.sheetnames:
             wb.create_sheet(sheetName)
         ws = wb.get_sheet_by_name(sheetName)

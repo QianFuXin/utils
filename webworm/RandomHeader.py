@@ -202,6 +202,10 @@ allHeaders = ['Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:21.0) Gecko/20130331 F
 import random
 
 
+def getRandomAgent():
+    return allHeaders[random.randint(0, len(allHeaders) - 1)]
+
+
 # 返回随机头
 def getRandomHeader():
     return {"User-Agent": allHeaders[random.randint(0, len(allHeaders) - 1)]}

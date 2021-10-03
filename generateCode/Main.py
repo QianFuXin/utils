@@ -1,5 +1,6 @@
 import os
 import re
+import PySimpleGUI as sg
 
 """
 因为人记住的内容有限,只是在脑中保存视图,不会记住所有内容,
@@ -14,36 +15,33 @@ for i in files:
     if re.match(".*\.py", i):
         # 导入源文件
         exec("from warehouse import " + i[:-3])
+# 获取所有源文件的文件名，不要.py后缀
+allType = []
+for i in files:
+    allType.append(i[:-3])
+allType.sort()
 
-if __name__ == '__main__':
-    # 获取所有源文件的文件名，不要.py后缀
-    allType = []
-    for i in files:
-        allType.append(i[:-3])
-    allType.sort()
-    while True:
-        typeId = [str(i) for i in range(1, len(allType) + 1)]
-        relationshipType = dict(zip(typeId, allType))
-        print("=========================")
-        for i in relationshipType:
-            print(i + "：" + relationshipType[i] + "代码")
-        typeChoose = input("输入序号：")
-        if typeChoose not in typeId:
-            print("输入错误")
-            exit(1)
+sg.theme('dark')
+
+layout = [[sg.Listbox(values=allType, enable_events=True, size=(12, 30), key='-file-', font=('Any 15')),
+           sg.Listbox(values=[], enable_events=True, size=(24, 30), key='-function-', font=('Any 15')),
+           sg.Output(size=(90, 30), key='-code-', font=('Any 13'))]]
+
+window = sg.Window('Pattern 2B', layout)
+
+while True:
+    event, values = window.read()
+    if event == sg.WIN_CLOSED:
+        break
+    if event == '-file-':
         functions = []
-        exec("functions=dir(" + relationshipType[typeChoose] + ")")
+        exec("functions=dir(" + values['-file-'][0] + ")")
         for i in ['__builtins__', '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__',
                   '__spec__']:
             functions.remove(i)
-        functionId = [str(i) for i in range(1, len(functions) + 1)]
-        relationshipFunction = dict(zip(functionId, functions))
-        print("=========================")
-        for i in relationshipFunction:
-            print(str(i) + "：" + relationshipFunction[i] + "")
-        functionChoose = input("输入序号：")
-        if functionChoose not in functionId:
-            print("输入错误")
-            exit(1)
-        print("=========================")
-        exec("print(" + relationshipType[typeChoose] + "." + relationshipFunction[functionChoose] + "()" + ")")
+        window['-function-'].update(functions)
+        window['-code-'].update("")
+    if event == "-function-":
+        window['-code-'].update("")
+        exec("print(" + values['-file-'][0] + "." + values['-function-'][0] + "()" + ")")
+window.close()

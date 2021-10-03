@@ -1,6 +1,6 @@
 # encoding:utf-8
 
-from utils.translate.BaiDuFanYi import *
+from utils.BaiDuFanYi import *
 import PySimpleGUI as sg
 
 

@@ -1,4 +1,5 @@
 import re
+from lxml import etree
 
 import requests
 from bs4 import BeautifulSoup
@@ -10,7 +11,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 
 def __myRequests__(url):
-    response = requests.get(url, headers=getRandomHeader())
+    response = requests.get(url, headers=getRandomHeader(), allow_redirects=True)
     #  返回码正常,返回request
     try:
         response.raise_for_status()
@@ -66,9 +67,25 @@ def downloadFile(url, path):
 
 
 # 返回html解析后的页面
-def parseHtml(html):
-    parsed = BeautifulSoup(html, "html.parser")
-    return parsed
+def parseHtml(html, features="html.parser"):
+    if features.__eq__("html.parser"):
+        parsed = BeautifulSoup(html, features)
+        return parsed
+
+
+def getTagByXPath(url, xpa):
+    html = getTextByURL(url)
+    if html:
+        # xpath，借用chrome的复制xpath
+        parsed = etree.HTML(html)
+        result = parsed.xpath(xpa)
+        # 空列表返回None
+        if result:
+            return result[0]
+        else:
+            return None
+    else:
+        return None
 
 
 """
