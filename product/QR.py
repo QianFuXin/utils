@@ -8,8 +8,8 @@ from utils.QR import makeQR
 
 sg.theme('BluePurple')
 
-layout = [[sg.Input(key='-text-'), sg.Button('制作', key="-Show-")],
-          [sg.Image(key='-IMAGE-', source="", size=(370, 370))]]
+layout = [[sg.Multiline(key='-text-',expand_x=True,expand_y=True), sg.Button('制作', key="-Show-")],
+          [sg.Image(key='-IMAGE-', source="",expand_x=True,expand_y=True)]]
 window = sg.Window('生成二维码', layout)
 
 while True:

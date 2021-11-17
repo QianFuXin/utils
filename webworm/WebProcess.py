@@ -1,6 +1,5 @@
 import re
 from lxml import etree
-
 import requests
 from bs4 import BeautifulSoup
 from selenium.webdriver import Chrome, ChromeOptions
@@ -10,15 +9,26 @@ import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
+# 请求页面
 def __myRequests__(url):
-    response = requests.get(url, headers=getRandomHeader(), allow_redirects=True)
-    #  返回码正常,返回request
+    response = requests.get(url.strip(), headers=getRandomHeader(), allow_redirects=True)
+    #  返回码正常,返回response
     try:
         response.raise_for_status()
         return response
-    # 返回码不正常,打印bug信息,返回None
+    # 返回码不正常,打印bug信息,返回responseNone
     except Exception as exc:
         print('bugInfo: %s' % (exc))
+        return None
+
+
+# 传进来一个url，返回html解析器
+def fastHtmlParse(url, encoding="utf-8"):
+    text = getTextByURL(url, encoding)
+    if text:
+        return parseHtml(text)
+    # 如果None,则返回None
+    else:
         return None
 
 
@@ -31,8 +41,7 @@ def getTextByURL(url, encoding="utf-8"):
         # 设置编码
         response.encoding = encoding
         # 请求到的内容
-        text = response.text
-        return text
+        return response.text
     # 如果None,则返回None
     else:
         return None
@@ -54,19 +63,15 @@ def getBinaryByURL(url):
 # 下载文件
 def downloadFile(url, path):
     binary = getBinaryByURL(url)
-    if len(url) > 50:
-        log = url[:50] + "..."
-    else:
-        log = url
     if binary:
         with open(path, "wb") as f:
             f.write(binary)
-        print("下载" + log + "成功")
+        print("下载" + path + "成功")
     else:
-        print("下载" + log + "失败")
+        print("下载" + path + "失败")
 
 
-# 返回html解析后的页面
+# 返回html解析后的页面  将str转换为bs4
 def parseHtml(html, features="html.parser"):
     if features.__eq__("html.parser"):
         parsed = BeautifulSoup(html, features)
@@ -74,16 +79,27 @@ def parseHtml(html, features="html.parser"):
 
 
 def getTagByXPath(url, xpa):
+    # 如果参数是字符串，代表只需要解析一个
+    if isinstance(xpa, str):
+        xpa = [xpa]
     html = getTextByURL(url)
+    print(html)
+    allParsed = []
     if html:
         # xpath，借用chrome的复制xpath
         parsed = etree.HTML(html)
-        result = parsed.xpath(xpa)
-        # 空列表返回None
-        if result:
-            return result[0]
+        for i in xpa:
+            result = parsed.xpath(i)
+            # 空列表返回None
+            if result:
+                allParsed.append(result[0])
+            else:
+                allParsed.append(None)
+        # 如果数组只有一个元素，返回数组也没多大意义
+        if len(allParsed) == 1:
+            return allParsed[0]
         else:
-            return None
+            return allParsed
     else:
         return None
 
@@ -153,7 +169,8 @@ def getLocationByText(parsed, text):
         return "网页中未找到输入的文本"
 
 
-def getInfoByURLWithSelenium(URL, headless=True, chromeDriverPath='/Users/apple/PycharmProjects/chromedriver90'):
+def getInfoByURLWithSelenium(URL, headless=True,
+                             chromeDriverPath=r'C:\Users\Administrator\PycharmProjects\QianFuXin\utils\webworm\chromedriver.exe'):
     option = ChromeOptions()
     # no page pattern
     option.headless = headless
@@ -166,7 +183,6 @@ def getInfoByURLWithSelenium(URL, headless=True, chromeDriverPath='/Users/apple/
         html = browser.page_source
         return html
     except:
-        html = browser.page_source
-        return html
+        return None
     finally:
         browser.close()

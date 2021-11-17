@@ -30,4 +30,4 @@ def getFakeID(address=None, birthday=None, sex=None):
     return validator.fake_id(address=address, birthday=birthday, sex=sex)
 
 
-print(getInfoByID("342225199809060518"))
+# print(getInfoByID("342225199809060518"))

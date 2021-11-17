@@ -1,6 +1,6 @@
 import os
 import zipfile
-from easyWriteCode.dir_and_file.GetPath import *
+from utils.GetPath import *
 
 """
  @Author QFX
@@ -13,9 +13,9 @@ from easyWriteCode.dir_and_file.GetPath import *
 """
 
 
-def compress(paths, compressedFileName="compress.zip", model=8):
+def compress(paths, compressedFileName="compressed.zip", model=8):
     """
-          ZIP_STORED = 0   不压缩
+          ZIP_STORED = 0   不压缩 只归档
           ZIP_DEFLATED = 8      gzip       快  压缩比率小
           ZIP_BZIP2 = 12          bzip2
           ZIP_LZMA = 14           lzma     慢  压缩比率高
@@ -51,11 +51,15 @@ def compress(paths, compressedFileName="compress.zip", model=8):
 """
 
 
-def uncompress(compressedFile, paths=os.getcwd(), model=8):
+def uncompress(compressedFile, path=os.getcwd(), model=8):
     # 构建zipFile对象
     z = zipfile.ZipFile(compressedFile, mode="r", compression=model)
-
+    # 放到同名文件夹下
+    path = os.path.join(path, getFilePrefix(os.path.basename(compressedFile)))
+    # 如果没有文件夹
+    if not os.path.exists(path):
+        os.mkdir(path)
     for i in z.namelist():
         # 解压文件
         print('开始解压[' + i + ']....')
-        z.extract(i, path=paths)
+        z.extract(i, path=path)
