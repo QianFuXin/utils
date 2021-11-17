@@ -11,7 +11,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 # 请求页面
 def __myRequests__(url):
-    response = requests.get(url.strip(), headers=getRandomHeader(), allow_redirects=True)
+    response = requests.get(url.strip(), headers=getRandomHeader(), allow_redirects=True, verify=False)
     #  返回码正常,返回response
     try:
         response.raise_for_status()
