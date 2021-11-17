@@ -6,9 +6,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 
-
 # 163邮箱只能发送纯文本，不可以添加附件和图片
-def sendEmailBy163(title, info, receivers, senderEmail='Mr_Qian_Ives@163.com', password='KJSMBAIGAJFJITBR',
+def sendEmailBy163(title, info, receivers, senderEmail='Mr_Qian_Ives@163.com', password=os.environ["pass163"],
                    name="钱甫新"):
     # 163邮箱的服务器
     host = 'smtp.163.com'
@@ -41,7 +40,7 @@ def sendEmailBy163(title, info, receivers, senderEmail='Mr_Qian_Ives@163.com', p
 
 
 # QQ邮箱可以发送文本、附件（仅限一个，多个文件请压缩）、图片（把图片当成附件）
-def sendEmailByQQ(title, info, accessory, receivers, senderEmail='1356227919@qq.com', password='cgwblgxpfnpviide',
+def sendEmailByQQ(title, info, accessory, receivers, senderEmail='1356227919@qq.com', password=os.environ["passqq"],
                   name="钱甫新"):
     # QQ邮箱的服务器
     host = 'smtp.qq.com'
@@ -117,3 +116,7 @@ def sendEmailByQQ(title, info, accessory, receivers, senderEmail='1356227919@qq.
         print(e.args)
         smtp.quit()
         return False
+
+
+
+sendEmailByQQ("请查看手机消息","立即查看","990509820@qq.com")
