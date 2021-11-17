@@ -116,7 +116,3 @@ def sendEmailByQQ(title, info, accessory, receivers, senderEmail='1356227919@qq.
         print(e.args)
         smtp.quit()
         return False
-
-
-
-sendEmailByQQ("请查看手机消息","立即查看","990509820@qq.com")
