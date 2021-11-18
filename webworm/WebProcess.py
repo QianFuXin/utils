@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from selenium.webdriver import Chrome, ChromeOptions
 from utils.webworm.RandomHeader import *
 import ssl
+import platform
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -171,11 +172,23 @@ def getLocationByText(parsed, text):
 
 def getInfoByURLWithSelenium(URL, headless=True,
                              chromeDriverPath=r'C:\Users\Administrator\PycharmProjects\QianFuXin\utils\webworm\chromedriver.exe'):
-    option = ChromeOptions()
-    # no page pattern
-    option.headless = headless
-    # ocr Chrome object
-    browser = Chrome(chromeDriverPath, options=option)
+    # 针对windows和linux的差异性，做出代码更改
+    if platform.system() == "Linux":
+        # linux默认路径
+        chromeDriverPath = "/usr/bin/chromedriver"
+        chrome_options = ChromeOptions()
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument("window-size=1024,768")
+        chrome_options.add_argument("--no-sandbox")
+        browser = Chrome(chrome_options=chrome_options)
+    # windows配置
+    else:
+        option = ChromeOptions()
+        # no page pattern
+        option.headless = headless
+        # ocr Chrome object
+        browser = Chrome(chromeDriverPath, options=option)
 
     try:
         browser.set_page_load_timeout(10)
