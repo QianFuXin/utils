@@ -1,42 +1,39 @@
 import re
+import time
+
 from lxml import etree
-import requests
 from bs4 import BeautifulSoup
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome, ChromeOptions
-from utils.webworm.RandomHeader import *
+from utils.webworm.HeaderAndProxies import *
 import ssl
 import platform
 
 ssl._create_default_https_context = ssl._create_unverified_context
+import logging
+
+# 设置日志级别 in (debug、info、warning、error、critical) 只显示级别以上的日志
+logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s - %(message)s')
 
 
-# 请求页面
-def __myRequests__(url):
-    response = requests.get(url.strip(), headers=getRandomHeader(), allow_redirects=True)
-    #  返回码正常,返回response
+# 返回response对象
+def myResponse(url):
     try:
+        response = requests.get(url.strip(), headers=getRandomHeader(), allow_redirects=True,
+                                proxies=getRandomProxies(),
+                                timeout=5)
         response.raise_for_status()
         return response
     # 返回码不正常,打印bug信息,返回responseNone
     except Exception as exc:
-        print('bugInfo: %s' % (exc))
-        return None
-
-
-# 传进来一个url，返回html解析器
-def fastHtmlParse(url, encoding="utf-8"):
-    text = getTextByURL(url, encoding)
-    if text:
-        return parseHtml(text)
-    # 如果None,则返回None
-    else:
+        logging.error(f'bugInfo: {exc}')
         return None
 
 
 # 传进来一个URL,返回该URL的文本内容
 def getTextByURL(url, encoding="utf-8"):
     # 请求URL
-    response = __myRequests__(url)
+    response = myResponse(url)
     # 正常
     if response:
         # 设置编码
@@ -48,10 +45,26 @@ def getTextByURL(url, encoding="utf-8"):
         return None
 
 
+# 返回html解析后的页面  将str转换为bs4
+def parseHtml(html, features="html.parser"):
+    parsed = BeautifulSoup(html, features)
+    return parsed
+
+
+# 传进来一个url，返回html解析器
+def fastHtmlParse(url, encoding="utf-8",features="html.parser"):
+    text = getTextByURL(url, encoding)
+    if text:
+        return parseHtml(text)
+    # 如果None,则返回None
+    else:
+        return None
+
+
 # 传进来一个URL,返回该URL的二进制内容
 def getBinaryByURL(url):
     # 请求URL
-    response = __myRequests__(url)
+    response = myResponse(url)
     # 正常
     if response:
         binary = response.content
@@ -67,52 +80,37 @@ def downloadFile(url, path):
     if binary:
         with open(path, "wb") as f:
             f.write(binary)
-        print("下载" + path + "成功")
+        logging.info("下载" + path + "成功")
     else:
-        print("下载" + path + "失败")
+        logging.info("下载" + path + "失败")
 
 
-# 返回html解析后的页面  将str转换为bs4
-def parseHtml(html, features="html.parser"):
-    if features.__eq__("html.parser"):
-        parsed = BeautifulSoup(html, features)
-        return parsed
-
-
-def getTagByXPath(url, xpa):
-    # 如果参数是字符串，代表只需要解析一个
-    if isinstance(xpa, str):
-        xpa = [xpa]
-    html = getTextByURL(url)
-    print(html)
-    allParsed = []
-    if html:
-        # xpath，借用chrome的复制xpath
-        parsed = etree.HTML(html)
-        for i in xpa:
-            result = parsed.xpath(i)
-            # 空列表返回None
-            if result:
-                allParsed.append(result[0])
-            else:
-                allParsed.append(None)
-        # 如果数组只有一个元素，返回数组也没多大意义
-        if len(allParsed) == 1:
-            return allParsed[0]
-        else:
-            return allParsed
+def myResponseWithSelenium(headless=False,
+                           chromeDriverPath=r'C:\Users\Administrator\PycharmProjects\QianFuXin\utils\webworm\chromedriver.exe'):
+    options = ChromeOptions()
+    # 添加代理
+    proxy = requests.get("http://1.12.181.18:5010/get/").json().get("proxy")
+    logging.info(f"使用代理{proxy}")
+    options.add_argument(f'--proxy-server={proxy}')
+    # 添加随机头
+    options.add_argument(
+        f'user-agent="{getRandomAgent()}"')
+    # 针对windows和linux的差异性，做出代码更改
+    if platform.system() == "Linux":
+        # linux默认路径，自动寻址，不需要设置
+        chromeDriverPath = "/usr/bin/chromedriver"
+        # linux的独有设置
+        options.add_argument('--headless')
+        options.add_argument('--disable-gpu')
+        options.add_argument("window-size=1024,768")
+        options.add_argument("--no-sandbox")
+    # windows配置
     else:
-        return None
+        # no page pattern
+        options.headless = headless
 
-
-"""
-输入网页中的某个唯一文本,返回包含该文本标签的位置  可以理解为自动抓标签
-例如
-输入 23 ~ 28
-输出
-parsed.select('html > body > div > div > div > dl > dd >span')[0]
-或者 parsed.find_all(name='dd', attrs={'class': ['week']})
-"""
+    browser = Chrome(chromeDriverPath, options=options)
+    return browser
 
 
 def getLocationByText(parsed, text):
@@ -172,30 +170,75 @@ def getLocationByText(parsed, text):
 
 def getInfoByURLWithSelenium(URL, headless=True,
                              chromeDriverPath=r'C:\Users\Administrator\PycharmProjects\QianFuXin\utils\webworm\chromedriver.exe'):
+    options = ChromeOptions()
+    # 添加随机头
+    options.add_argument(
+        f"User-Agent={getRandomAgent()}")
+    # 添加代理
+    proxy = requests.get("http://1.12.181.18:5010/get/").json().get("proxy")
+    options.add_argument(f"–-proxy-server=http://{proxy}")
     # 针对windows和linux的差异性，做出代码更改
     if platform.system() == "Linux":
-        # linux默认路径
+        # linux默认路径，自动寻址，不需要设置
         chromeDriverPath = "/usr/bin/chromedriver"
-        chrome_options = ChromeOptions()
-        chrome_options.add_argument('--headless')
-        chrome_options.add_argument('--disable-gpu')
-        chrome_options.add_argument("window-size=1024,768")
-        chrome_options.add_argument("--no-sandbox")
-        browser = Chrome(chrome_options=chrome_options)
+        # linux的独有设置
+        options.add_argument('--headless')
+        options.add_argument('--disable-gpu')
+        options.add_argument("window-size=1024,768")
+        options.add_argument("--no-sandbox")
     # windows配置
     else:
-        option = ChromeOptions()
+        options = ChromeOptions()
         # no page pattern
-        option.headless = headless
-        # ocr Chrome object
-        browser = Chrome(chromeDriverPath, options=option)
-
+        options.headless = headless
+    browser = Chrome(chromeDriverPath, options=options)
+    # 设置超时时间
+    browser.set_page_load_timeout(10)
+    browser.set_script_timeout(10)
     try:
-        browser.set_page_load_timeout(10)
         browser.get(URL)
-        html = browser.page_source
-        return html
-    except:
-        return None
+        time.sleep(5)
+    except TimeoutException:
+        print("超时已停止")
+        browser.execute_script('window.stop()')
     finally:
+        html = browser.page_source
         browser.close()
+        browser.quit()
+        return html
+
+
+def getTagByXPath(url, xpa):
+    # 如果参数是字符串，代表只需要解析一个
+    if isinstance(xpa, str):
+        xpa = [xpa]
+    html = getTextByURL(url)
+    print(html)
+    allParsed = []
+    if html:
+        # xpath，借用chrome的复制xpath
+        parsed = etree.HTML(html)
+        for i in xpa:
+            result = parsed.xpath(i)
+            # 空列表返回None
+            if result:
+                allParsed.append(result[0])
+            else:
+                allParsed.append(None)
+        # 如果数组只有一个元素，返回数组也没多大意义
+        if len(allParsed) == 1:
+            return allParsed[0]
+        else:
+            return allParsed
+    else:
+        return None
+
+
+"""
+输入网页中的某个唯一文本,返回包含该文本标签的位置  可以理解为自动抓标签
+例如
+输入 23 ~ 28
+输出
+parsed.select('html > body > div > div > div > dl > dd >span')[0]
+或者 parsed.find_all(name='dd', attrs={'class': ['week']})
+"""
